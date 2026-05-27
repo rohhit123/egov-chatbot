@@ -1503,6 +1503,31 @@ def logout():
     flash("You have been logged out.", "success")
     return redirect(url_for('index'))
 
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user and existing_user.id != current_user.id:
+            flash('Username already taken.', 'error')
+            return redirect(url_for('profile'))
+
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email and existing_email.id != current_user.id:
+            flash('Email already registered.', 'error')
+            return redirect(url_for('profile'))
+
+        current_user.username = username
+        current_user.email = email
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('profile'))
+
+    return render_template('profile.html')    
+
 
 # ------------------ Run ------------------
 
