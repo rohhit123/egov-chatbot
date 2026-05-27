@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Admin | E-Gov Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-cog"></i> Admin Dashboard</h1>
+    <p>Manage service requests and monitor system activity.</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card blue"><i class="fas fa-users"></i><div><span class="stat-value">{{ users|length }}</span><span class="stat-name">Total Users</span></div></div>
+    <div class="stat-card orange"><i class="fas fa-file-alt"></i><div><span class="stat-value">{{ requests|length }}</span><span class="stat-name">All Requests</span></div></div>
+    <div class="stat-card green"><i class="fas fa-star"></i><div><span class="stat-value">{{ avg_rating }}/5</span><span class="stat-name">Avg Rating</span></div></div>
+    <div class="stat-card purple"><i class="fas fa-robot"></i><div><span class="stat-value">Active</span><span class="stat-name">AI Status</span></div></div>
+</div>
+
+<div class="dash-card">
+    <h3><i class="fas fa-tasks"></i> All Service Requests</h3>
+    {% if requests %}
+    <table class="data-table">
+        <thead>
+            <tr><th>Ref</th><th>User</th><th>Service</th><th>Description</th><th>Status</th><th>Date</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+            {% for req in requests %}
+            <tr>
+                <td><code>{{ req.reference_number }}</code></td>
+                <td>{{ req.user_id }}</td>
+                <td>{{ req.service_type }}</td>
+                <td>{{ req.description[:60] }}{% if req.description|length > 60 %}...{% endif %}</td>
+                <td><span class="status-badge status-{{ req.status.lower().replace(' ', '') }}">{{ req.status }}</span></td>
+                <td>{{ req.submitted_at }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('update_status', req_id=req.id) }}" style="display:flex;gap:4px;">
+                        <select name="status" style="padding:4px;border-radius:4px;border:1px solid #ccc;font-size:12px;">
+                            <option {% if req.status=='Pending' %}selected{% endif %}>Pending</option>
+                            <option {% if req.status=='In Progress' %}selected{% endif %}>In Progress</option>
+                            <option {% if req.status=='Completed' %}selected{% endif %}>Completed</option>
+                            <option {% if req.status=='Rejected' %}selected{% endif %}>Rejected</option>
+                        </select>
+                        <button type="submit" class="btn-sm">Update</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state"><i class="fas fa-inbox"></i><p>No requests yet.</p></div>
+    {% endif %}
+</div>
+{% endblock %}

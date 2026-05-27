@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}E-Gov AI Chatbot{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <i class="fas fa-landmark"></i>
+            <span>E-Gov Portal</span>
+        </div>
+        {% if current_user.is_authenticated %}
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}" {% if request.endpoint == 'dashboard' %}class="active"{% endif %}>
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{{ url_for('chatbot') }}" {% if request.endpoint == 'chatbot' %}class="active"{% endif %}>
+                <i class="fas fa-robot"></i> AI Chatbot
+            </a>
+            <a href="{{ url_for('services') }}" {% if request.endpoint == 'services' %}class="active"{% endif %}>
+                <i class="fas fa-file-alt"></i> Services
+            </a>
+            <a href="{{ url_for('feedback') }}" {% if request.endpoint == 'feedback' %}class="active"{% endif %}>
+                <i class="fas fa-star"></i> Feedback
+            </a>
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('admin') }}" {% if request.endpoint == 'admin' %}class="active"{% endif %}>
+                <i class="fas fa-cog"></i> Admin
+            </a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="btn-logout">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+        {% endif %}
+    </nav>
+
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                    {{ message|safe }}
+                    <span class="close-alert" onclick="this.parentElement.remove()">×</span>
+                </div>
+            {% endfor %}
+        {% endwith %}
+    </div>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>© 2025 Australian E-Government Service Portal | AI-Powered Citizen Support | ITS320 Capstone Project</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

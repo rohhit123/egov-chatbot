@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard | E-Gov Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Welcome back, {{ current_user.username }}! 👋</h1>
+    <p>Here's an overview of your government service activities.</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card blue">
+        <i class="fas fa-file-alt"></i>
+        <div>
+            <span class="stat-value">{{ requests_count }}</span>
+            <span class="stat-name">Total Requests</span>
+        </div>
+    </div>
+    <div class="stat-card orange">
+        <i class="fas fa-clock"></i>
+        <div>
+            <span class="stat-value">{{ pending_count }}</span>
+            <span class="stat-name">Pending</span>
+        </div>
+    </div>
+    <div class="stat-card green">
+        <i class="fas fa-robot"></i>
+        <div>
+            <span class="stat-value">24/7</span>
+            <span class="stat-name">AI Support</span>
+        </div>
+    </div>
+    <div class="stat-card purple">
+        <i class="fas fa-check-circle"></i>
+        <div>
+            <span class="stat-value">{{ requests_count - pending_count }}</span>
+            <span class="stat-name">Completed</span>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <div class="dash-card">
+        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+        <div class="quick-actions">
+            <a href="{{ url_for('chatbot') }}" class="qa-btn"><i class="fas fa-robot"></i> Chat with AI</a>
+            <a href="{{ url_for('services') }}" class="qa-btn"><i class="fas fa-plus"></i> New Request</a>
+            <a href="{{ url_for('feedback') }}" class="qa-btn"><i class="fas fa-star"></i> Give Feedback</a>
+        </div>
+    </div>
+
+    <div class="dash-card">
+        <h3><i class="fas fa-history"></i> Recent Service Requests</h3>
+        {% if recent_requests %}
+        <table class="data-table">
+            <thead>
+                <tr><th>Reference</th><th>Service</th><th>Status</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+                {% for req in recent_requests %}
+                <tr>
+                    <td><code>{{ req.reference_number }}</code></td>
+                    <td>{{ req.service_type }}</td>
+                    <td><span class="status-badge status-{{ req.status.lower() }}">{{ req.status }}</span></td>
+                    <td>{{ req.submitted_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>No service requests yet.</p>
+            <a href="{{ url_for('services') }}" class="btn-primary">Submit a Request</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="ai-promo">
+    <i class="fas fa-robot"></i>
+    <div>
+        <h3>Need help? Chat with our AI Assistant!</h3>
+        <p>Get instant answers about tax, passports, Medicare, Centrelink, and more — available 24/7.</p>
+    </div>
+    <a href="{{ url_for('chatbot') }}" class="btn-primary">Start Chatting</a>
+</div>
+{% endblock %}

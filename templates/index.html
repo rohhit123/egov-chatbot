@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Welcome | E-Gov AI Portal{% endblock %}
+{% block content %}
+<div class="hero">
+    <div class="hero-content">
+        <div class="hero-badge"><i class="fas fa-robot"></i> AI-Powered</div>
+        <h1>Australian E-Government<br><span class="highlight">AI Service Portal</span></h1>
+        <p class="hero-sub">Get instant answers to your government service questions 24/7. Our AI chatbot handles tax queries, birth certificates, passports, Medicare, and much more — in seconds, not days.</p>
+        <div class="hero-stats">
+            <div class="stat"><span class="stat-num">24/7</span><span class="stat-label">Available</span></div>
+            <div class="stat"><span class="stat-num">&lt;2min</span><span class="stat-label">Response Time</span></div>
+            <div class="stat"><span class="stat-num">70%</span><span class="stat-label">Auto-resolved</span></div>
+            <div class="stat"><span class="stat-num">95%</span><span class="stat-label">Accuracy</span></div>
+        </div>
+        <div class="hero-actions">
+            <a href="{{ url_for('register') }}" class="btn-primary"><i class="fas fa-user-plus"></i> Get Started</a>
+            <a href="{{ url_for('login') }}" class="btn-secondary"><i class="fas fa-sign-in-alt"></i> Login</a>
+        </div>
+    </div>
+    <div class="hero-image">
+        <div class="chat-preview">
+            <div class="chat-header"><i class="fas fa-robot"></i> AI Assistant <span class="online-dot"></span></div>
+            <div class="chat-body">
+                <div class="msg bot"><span>G'day! How can I help you today? 🇦🇺</span></div>
+                <div class="msg user"><span>I need to renew my passport</span></div>
+                <div class="msg bot"><span>Sure! Passport renewal takes 6 weeks standard. Fee is $308 AUD. Visit passports.gov.au to apply online. Shall I submit a service request?</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="services-overview">
+    <h2>Services Available</h2>
+    <div class="service-grid">
+        <div class="service-card"><i class="fas fa-file-invoice-dollar"></i><h3>Tax & ATO</h3><p>Lodge returns, check refunds, GST queries</p></div>
+        <div class="service-card"><i class="fas fa-baby"></i><h3>Vital Records</h3><p>Birth, death, marriage certificates</p></div>
+        <div class="service-card"><i class="fas fa-passport"></i><h3>Passports</h3><p>Apply, renew, track status</p></div>
+        <div class="service-card"><i class="fas fa-car"></i><h3>Licensing</h3><p>Driver's licence and vehicle rego</p></div>
+        <div class="service-card"><i class="fas fa-heartbeat"></i><h3>Medicare</h3><p>Enrol, replace card, billing queries</p></div>
+        <div class="service-card"><i class="fas fa-hand-holding-usd"></i><h3>Centrelink</h3><p>Payments, eligibility, reporting</p></div>
+    </div>
+</section>
+{% endblock %}

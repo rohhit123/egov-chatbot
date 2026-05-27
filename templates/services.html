@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Services | E-Gov Portal{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-file-alt"></i> Government Service Requests</h1>
+    <p>Submit and track your government service requests.</p>
+</div>
+
+<div class="services-layout">
+    <div class="service-form-card">
+        <h3><i class="fas fa-plus-circle"></i> Submit New Request</h3>
+        <form method="POST">
+            <div class="form-group">
+                <label>Service Type</label>
+                <select name="service_type" required>
+                    <option value="">-- Select a Service --</option>
+                    <option value="Tax Return Assistance">Tax Return Assistance</option>
+                    <option value="Birth Certificate">Birth Certificate</option>
+                    <option value="Passport Application/Renewal">Passport Application/Renewal</option>
+                    <option value="Driver's Licence">Driver's Licence</option>
+                    <option value="Vehicle Registration">Vehicle Registration</option>
+                    <option value="Medicare Enrolment">Medicare Enrolment</option>
+                    <option value="Centrelink Payment">Centrelink Payment</option>
+                    <option value="Council Services">Council Services</option>
+                    <option value="General Complaint">General Complaint</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" rows="5" required placeholder="Please describe your request in detail..."></textarea>
+            </div>
+            <button type="submit" class="btn-primary full-width"><i class="fas fa-paper-plane"></i> Submit Request</button>
+        </form>
+    </div>
+
+    <div class="requests-table-card">
+        <h3><i class="fas fa-list"></i> My Requests</h3>
+        {% if requests %}
+        <table class="data-table">
+            <thead>
+                <tr><th>Reference</th><th>Service</th><th>Status</th><th>Submitted</th></tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td><code>{{ req.reference_number }}</code></td>
+                    <td>{{ req.service_type }}</td>
+                    <td><span class="status-badge status-{{ req.status.lower().replace(' ', '') }}">{{ req.status }}</span></td>
+                    <td>{{ req.submitted_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <p>No service requests submitted yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

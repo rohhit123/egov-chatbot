@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}AI Chatbot | E-Gov Portal{% endblock %}
+{% block content %}
+<div class="chatbot-page">
+    <div class="chatbot-sidebar">
+        <h3><i class="fas fa-lightbulb"></i> Quick Topics</h3>
+        <p class="sidebar-hint">Click a topic to get started:</p>
+        <div class="quick-topics">
+            <button class="topic-btn" onclick="sendQuickMessage('Hello')">👋 Hello</button>
+            <button class="topic-btn" onclick="sendQuickMessage('I need help with my tax return')">💰 Tax Help</button>
+            <button class="topic-btn" onclick="sendQuickMessage('I need a birth certificate')">👶 Birth Certificate</button>
+            <button class="topic-btn" onclick="sendQuickMessage('How do I renew my passport?')">🛂 Passport</button>
+            <button class="topic-btn" onclick="sendQuickMessage('Driver licence renewal')">🚗 Driver Licence</button>
+            <button class="topic-btn" onclick="sendQuickMessage('Medicare card help')">💊 Medicare</button>
+            <button class="topic-btn" onclick="sendQuickMessage('Centrelink payments')">🏦 Centrelink</button>
+            <button class="topic-btn" onclick="sendQuickMessage('Council rates and services')">🏘️ Council</button>
+            <button class="topic-btn" onclick="sendQuickMessage('What are your operating hours?')">🕐 Hours</button>
+            <button class="topic-btn" onclick="sendQuickMessage('I want to make a complaint')">📢 Complaint</button>
+        </div>
+        <div class="ai-notice">
+            <i class="fas fa-info-circle"></i>
+            <p>This is an AI assistant. For complex issues, a human agent is available Mon–Fri 8am–5pm AEST.</p>
+        </div>
+    </div>
+
+    <div class="chatbot-main">
+        <div class="chat-header-bar">
+            <div class="chat-agent-info">
+                <div class="agent-avatar"><i class="fas fa-robot"></i></div>
+                <div>
+                    <strong>GovAssist AI</strong>
+                    <span class="online-status"><span class="dot"></span> Online — responds instantly</span>
+                </div>
+            </div>
+            <button class="btn-clear" onclick="clearChat()"><i class="fas fa-trash"></i> Clear</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="msg-wrapper bot-msg">
+                <div class="avatar"><i class="fas fa-robot"></i></div>
+                <div class="bubble">
+                    <p>G'day! I'm <strong>GovAssist AI</strong>, your Australian e-government assistant. 🇦🇺</p>
+                    <p>I can help you with tax, passports, Medicare, Centrelink, licences, and more. What can I help you with today?</p>
+                    <span class="msg-time">Just now</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator" style="display:none">
+            <div class="avatar"><i class="fas fa-robot"></i></div>
+            <div class="bubble typing">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="Type your question here..." 
+                   onkeydown="if(event.key==='Enter') sendMessage()">
+            <button onclick="sendMessage()" class="send-btn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function sendMessage() {
+    const input = document.getElementById('userInput');
+    const msg = input.value.trim();
+    if (!msg) return;
+    
+    appendMessage('user', msg);
+    input.value = '';
+    showTyping();
+    
+    fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+    })
+    .then(r => r.json())
+    .then(data => {
+        hideTyping();
+        appendMessage('bot', data.response);
+    })
+    .catch(() => {
+        hideTyping();
+        appendMessage('bot', 'Sorry, I encountered an error. Please try again.');
+    });
+}
+
+function sendQuickMessage(msg) {
+    document.getElementById('userInput').value = msg;
+    sendMessage();
+}
+
+function appendMessage(role, content) {
+    const container = document.getElementById('chatMessages');
+    const now = new Date().toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
+    const wrapper = document.createElement('div');
+    wrapper.className = `msg-wrapper ${role === 'user' ? 'user-msg' : 'bot-msg'}`;
+    wrapper.innerHTML = `
+        ${role === 'bot' ? '<div class="avatar"><i class="fas fa-robot"></i></div>' : ''}
+        <div class="bubble">
+            <p>${content}</p>
+            <span class="msg-time">${now}</span>
+        </div>
+        ${role === 'user' ? '<div class="avatar user-av"><i class="fas fa-user"></i></div>' : ''}
+    `;
+    container.appendChild(wrapper);
+    container.scrollTop = container.scrollHeight;
+}
+
+function showTyping() {
+    document.getElementById('typingIndicator').style.display = 'flex';
+    document.getElementById('chatMessages').scrollTop = 999999;
+}
+function hideTyping() {
+    document.getElementById('typingIndicator').style.display = 'none';
+}
+function clearChat() {
+    const c = document.getElementById('chatMessages');
+    c.innerHTML = '';
+    appendMessage('bot', 'Chat cleared. How can I help you today?');
+}
+</script>
+{% endblock %}
