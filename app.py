@@ -10,7 +10,7 @@ import random
 import requests as http_requests
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY")
+app.secret_key = os.environ.get("SECRET_KEY", "egov_secret_key_2024")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///egov_chatbot.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -397,30 +397,48 @@ def get_bot_response(user_message):
     except Exception as e:
         print(f"Ollama not available: {e}")
 
-    # Try OpenRouter second — works on Render
+    # Try OpenRouter with correct model
     try:
         if OPENROUTER_API_KEY:
+            print(f"Attempting OpenRouter with API key: {OPENROUTER_API_KEY[:10]}...")
             client = OpenAI(
                 base_url="https://openrouter.ai/api/v1",
                 api_key=OPENROUTER_API_KEY
             )
-            completion = client.chat.completions.create(
-                model="mistralai/mistral-7b-instruct",
-                max_tokens=400,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": user_message}
-                ]
-            )
-            print("✅ OpenRouter responded")
-            return completion.choices[0].message.content
+            
+            # Try multiple models if first fails
+            models_to_try = [
+                "mistralai/mistral-7b-instruct",  # No :free suffix
+                "google/gemma-2-2b-it:free",      # Free tier model
+                "microsoft/phi-2:free",            # Another free model
+                "nousresearch/hermes-3-llama-3.1-8b:free"
+            ]
+            
+            for model in models_to_try:
+                try:
+                    print(f"Trying model: {model}")
+                    completion = client.chat.completions.create(
+                        model=model,
+                        max_tokens=400,
+                        messages=[
+                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "user", "content": user_message}
+                        ],
+                        timeout=15
+                    )
+                    print(f"✅ OpenRouter responded with {model}")
+                    return completion.choices[0].message.content
+                except Exception as model_error:
+                    print(f"Model {model} failed: {model_error}")
+                    continue
+        else:
+            print("No OpenRouter API key found")
     except Exception as e:
         print(f"OpenRouter not available: {e}")
 
     # Final fallback — keywords always work
     print("Using keyword fallback")
     return keyword_fallback(user_message)
-
 
 def keyword_fallback(user_message):
     """Keyword matcher when AI is unavailable."""
