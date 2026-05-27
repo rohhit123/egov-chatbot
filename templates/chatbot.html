@@ -39,8 +39,10 @@
             <div class="msg-wrapper bot-msg">
                 <div class="avatar"><i class="fas fa-robot"></i></div>
                 <div class="bubble">
-                    <p>G'day! I'm <strong>GovAssist AI</strong>, your Australian e-government assistant. 🇦🇺</p>
-                    <p>I can help you with tax, passports, Medicare, Centrelink, licences, and more. What can I help you with today?</p>
+                    <div class="bubble-content">
+                        <p>G'day! I'm <strong>GovAssist AI</strong>, your Australian e-government assistant. 🇦🇺</p>
+                        <p>I can help you with tax, passports, Medicare, Centrelink, licences, and more. What can I help you with today?</p>
+                    </div>
                     <span class="msg-time">Just now</span>
                 </div>
             </div>
@@ -54,25 +56,116 @@
         </div>
 
         <div class="chat-input-area">
-            <input type="text" id="userInput" placeholder="Type your question here..." 
+            <input type="text" id="userInput" placeholder="Type your question here..."
                    onkeydown="if(event.key==='Enter') sendMessage()">
             <button onclick="sendMessage()" class="send-btn"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
 </div>
+
+<style>
+/* ── Bubble content formatting ── */
+.bubble-content {
+    line-height: 1.65;
+    font-size: 0.95rem;
+}
+.bubble-content p {
+    margin: 0 0 6px 0;
+}
+.bubble-content p:last-child {
+    margin-bottom: 0;
+}
+.bubble-content b,
+.bubble-content strong {
+    font-weight: 600;
+    color: inherit;
+}
+.bubble-content a {
+    color: #2980b9;
+    text-decoration: underline;
+    word-break: break-all;
+}
+.bubble-content a:hover {
+    color: #1a5276;
+}
+/* Bullet lines from <br>• */
+.bubble-content br {
+    display: block;
+    margin: 2px 0;
+}
+/* Formatted list styling */
+.bubble-content ul {
+    margin: 6px 0 6px 18px;
+    padding: 0;
+}
+.bubble-content ul li {
+    margin-bottom: 4px;
+}
+
+/* ── User bubble ── */
+.user-msg .bubble {
+    background: linear-gradient(135deg, #2980b9, #1a5276);
+    color: #fff;
+    border-radius: 18px 4px 18px 18px;
+}
+.user-msg .bubble-content a {
+    color: #aed6f1;
+}
+
+/* ── Bot bubble ── */
+.bot-msg .bubble {
+    background: #f4f6f8;
+    color: #2c3e50;
+    border-radius: 4px 18px 18px 18px;
+    border: 1px solid #e0e4e8;
+}
+
+/* ── Time stamp ── */
+.msg-time {
+    display: block;
+    font-size: 0.72rem;
+    opacity: 0.6;
+    margin-top: 6px;
+    text-align: right;
+}
+</style>
 {% endblock %}
 
 {% block scripts %}
 <script>
+function formatResponse(text) {
+    // Convert <br> and \n to actual line breaks handled by innerHTML
+    // Already HTML from backend — just return as-is but wrap nicely
+    return text;
+}
+
+function appendMessage(role, content) {
+    const container = document.getElementById('chatMessages');
+    const now = new Date().toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
+    const wrapper = document.createElement('div');
+    wrapper.className = `msg-wrapper ${role === 'user' ? 'user-msg' : 'bot-msg'}`;
+
+    wrapper.innerHTML = `
+        ${role === 'bot' ? '<div class="avatar"><i class="fas fa-robot"></i></div>' : ''}
+        <div class="bubble">
+            <div class="bubble-content">${content}</div>
+            <span class="msg-time">${now}</span>
+        </div>
+        ${role === 'user' ? '<div class="avatar user-av"><i class="fas fa-user"></i></div>' : ''}
+    `;
+    container.appendChild(wrapper);
+    container.scrollTop = container.scrollHeight;
+}
+
 function sendMessage() {
     const input = document.getElementById('userInput');
     const msg = input.value.trim();
     if (!msg) return;
-    
+
     appendMessage('user', msg);
     input.value = '';
     showTyping();
-    
+
     fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,23 +187,6 @@ function sendQuickMessage(msg) {
     sendMessage();
 }
 
-function appendMessage(role, content) {
-    const container = document.getElementById('chatMessages');
-    const now = new Date().toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
-    const wrapper = document.createElement('div');
-    wrapper.className = `msg-wrapper ${role === 'user' ? 'user-msg' : 'bot-msg'}`;
-    wrapper.innerHTML = `
-        ${role === 'bot' ? '<div class="avatar"><i class="fas fa-robot"></i></div>' : ''}
-        <div class="bubble">
-            <p>${content}</p>
-            <span class="msg-time">${now}</span>
-        </div>
-        ${role === 'user' ? '<div class="avatar user-av"><i class="fas fa-user"></i></div>' : ''}
-    `;
-    container.appendChild(wrapper);
-    container.scrollTop = container.scrollHeight;
-}
-
 function showTyping() {
     document.getElementById('typingIndicator').style.display = 'flex';
     document.getElementById('chatMessages').scrollTop = 999999;
@@ -121,7 +197,7 @@ function hideTyping() {
 function clearChat() {
     const c = document.getElementById('chatMessages');
     c.innerHTML = '';
-    appendMessage('bot', 'Chat cleared. How can I help you today?');
+    appendMessage('bot', 'Chat cleared! How can I help you today? 😊');
 }
 </script>
 {% endblock %}
