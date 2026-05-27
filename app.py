@@ -397,7 +397,7 @@ def get_bot_response(user_message):
     except Exception as e:
         print(f"Ollama not available: {e}")
 
-    # Try OpenRouter with correct model
+    # Try OpenRouter with correct model names
     try:
         if OPENROUTER_API_KEY:
             print(f"Attempting OpenRouter with API key: {OPENROUTER_API_KEY[:10]}...")
@@ -406,12 +406,12 @@ def get_bot_response(user_message):
                 api_key=OPENROUTER_API_KEY
             )
             
-            # Try multiple models if first fails
+            # Correct model names that work on OpenRouter
             models_to_try = [
-                "mistralai/mistral-7b-instruct",  # No :free suffix
-                "google/gemma-2-2b-it:free",      # Free tier model
-                "microsoft/phi-2:free",            # Another free model
-                "nousresearch/hermes-3-llama-3.1-8b:free"
+                "mistralai/mistral-7b-instruct:free",  # Works with :free
+                "google/gemma-2-2b-it:free",
+                "microsoft/phi-2:free",
+                "meta-llama/llama-3.2-3b-instruct:free"
             ]
             
             for model in models_to_try:
