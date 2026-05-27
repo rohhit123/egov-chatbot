@@ -711,7 +711,43 @@ def logout():
     flash("You have been logged out.", "success")
     return redirect(url_for('index'))
 
+# ------------------ Error Handlers ------------------
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    return render_template('500.html'), 500
+# ------------------ Profile Route ------------------
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+
+        # Check if username taken by another user
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user and existing_user.id != current_user.id:
+            flash('Username already taken.', 'error')
+            return redirect(url_for('profile'))
+
+        # Check if email taken by another user
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email and existing_email.id != current_user.id:
+            flash('Email already registered.', 'error')
+            return redirect(url_for('profile'))
+
+        current_user.username = username
+        current_user.email = email
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('profile'))
+
+    return render_template('profile.html')
 # ------------------ Run ------------------
 
 if __name__ == '__main__':
@@ -1439,17 +1475,40 @@ def admin():
                            avg_rating=round(avg_rating, 1))
 
 
-@app.route('/admin/update_status/<int:req_id>', methods=['POST'])
+@app.route('/admin')
 @login_required
-def update_status(req_id):
+def admin():
     if current_user.role != 'admin':
-        return jsonify({'error': 'Access denied'}), 403
-    req = ServiceRequest.query.get_or_404(req_id)
-    req.status = request.form['status']
-    req.updated_at = datetime.now().strftime("%Y-%m-%d %H:%M")
-    db.session.commit()
-    flash("Status updated.", "success")
-    return redirect(url_for('admin'))
+        flash("Access denied.", "error")
+        return redirect(url_for('dashboard'))
+    all_requests = ServiceRequest.query.order_by(ServiceRequest.id.desc()).all()
+    all_users = User.query.all()
+    avg_rating = db.session.query(db.func.avg(Feedback.rating)).scalar() or 0
+
+    # Chart data — requests by service type
+    service_types = db.session.query(
+        ServiceRequest.service_type,
+        db.func.count(ServiceRequest.id)
+    ).group_by(ServiceRequest.service_type).all()
+    service_labels = [r[0] for r in service_types]
+    service_counts = [r[1] for r in service_types]
+
+    # Chart data — requests by status
+    status_data = db.session.query(
+        ServiceRequest.status,
+        db.func.count(ServiceRequest.id)
+    ).group_by(ServiceRequest.status).all()
+    status_labels = [r[0] for r in status_data]
+    status_counts = [r[1] for r in status_data]
+
+    return render_template('admin.html',
+                           requests=all_requests,
+                           users=all_users,
+                           avg_rating=round(avg_rating, 1),
+                           service_labels=service_labels,
+                           service_counts=service_counts,
+                           status_labels=status_labels,
+                           status_counts=status_counts)
 
 
 @app.route('/logout')

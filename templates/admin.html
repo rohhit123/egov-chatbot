@@ -48,4 +48,77 @@
     <div class="empty-state"><i class="fas fa-inbox"></i><p>No requests yet.</p></div>
     {% endif %}
 </div>
+<!-- Charts Section -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin:32px 0;">
+
+    <!-- Requests by Service Type -->
+    <div class="auth-card" style="padding:24px;">
+        <h3 style="margin-bottom:16px;"><i class="fas fa-chart-bar"></i> Requests by Service Type</h3>
+        <canvas id="serviceChart" height="250"></canvas>
+    </div>
+
+    <!-- Requests by Status -->
+    <div class="auth-card" style="padding:24px;">
+        <h3 style="margin-bottom:16px;"><i class="fas fa-chart-pie"></i> Requests by Status</h3>
+        <canvas id="statusChart" height="250"></canvas>
+    </div>
+
+</div>
+
+<script>
+    // Service Type Bar Chart
+    const serviceCtx = document.getElementById('serviceChart').getContext('2d');
+    new Chart(serviceCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ service_labels | tojson }},
+            datasets: [{
+                label: 'Requests',
+                data: {{ service_counts | tojson }},
+                backgroundColor: [
+                    '#3498db', '#2ecc71', '#e74c3c', '#f39c12',
+                    '#9b59b6', '#1abc9c', '#e67e22', '#34495e'
+                ],
+                borderRadius: 6,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1 }
+                }
+            }
+        }
+    });
+
+    // Status Doughnut Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ status_labels | tojson }},
+            datasets: [{
+                data: {{ status_counts | tojson }},
+                backgroundColor: ['#f39c12', '#2ecc71', '#e74c3c', '#3498db'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 16, font: { size: 13 } }
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}

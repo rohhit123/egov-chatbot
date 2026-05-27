@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Page Not Found | E-Gov Portal{% endblock %}
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card" style="text-align:center;">
+        <div class="auth-header">
+            <i class="fas fa-exclamation-triangle auth-icon" style="color:#e74c3c;"></i>
+            <h2 style="font-size:72px; margin:0; color:#e74c3c;">404</h2>
+            <h3>Page Not Found</h3>
+            <p>The page you're looking for doesn't exist or has been moved.</p>
+        </div>
+        <a href="{{ url_for('index') }}" class="btn-primary full-width">
+            <i class="fas fa-home"></i> Back to Home
+        </a>
+    </div>
+</div>
+{% endblock %}
