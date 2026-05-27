@@ -613,3 +613,22 @@ if __name__ == '__main__':
             db.session.commit()
             print("Admin user created: admin@egov.gov.au / admin123")
     app.run(debug=True, port=5000)
+
+# ------------------ Database Init for Render (gunicorn) ------------------
+# This runs when gunicorn imports the app module
+with app.app_context():
+    try:
+        db.create_all()
+        if not User.query.filter_by(email='admin@egov.gov.au').first():
+            admin_user = User(
+                username='admin',
+                email='admin@egov.gov.au',
+                password=generate_password_hash('admin123', method='pbkdf2:sha256', salt_length=8),
+                role='admin'
+            )
+            db.session.add(admin_user)
+            db.session.commit()
+            print("Admin user created!")
+        print("Database initialized!")
+    except Exception as e:
+        print(f"DB init error: {e}")
