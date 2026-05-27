@@ -1,12 +1,12 @@
+# Backup current file
+mv requirements.txt requirements.txt.backup
+
+# Create correct requirements.txt
 cat > requirements.txt << 'EOF'
-Flask==3.1.2
-Flask-Login==0.6.3
-Flask-SQLAlchemy==3.1.1
-Werkzeug==3.1.3
-SQLAlchemy==2.0.43
-Jinja2==3.1.6
-gunicorn==23.0.0
-requests==2.32.3
-openai==2.38.0
+Flask>=2.3.0
+flask-sqlalchemy>=3.0.0
+flask-login>=0.6.0
+werkzeug>=2.3.0
+openai>=1.0.0
+requests>=2.31.0
 EOF
-echo "requests>=2.31.0" >> requirements.txt
