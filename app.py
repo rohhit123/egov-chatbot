@@ -11,7 +11,7 @@ import requests as http_requests
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "egov_secret_key_2024")
-OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "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")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///egov_chatbot.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
