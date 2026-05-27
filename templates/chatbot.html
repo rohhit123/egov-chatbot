@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}AI Chatbot | E-Gov Portal{% endblock %}
 {% block content %}
+<button class="mobile-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-lightbulb"></i> Quick Topics ▼
+</button>
 <div class="chatbot-page">
     <div class="chatbot-sidebar">
         <h3><i class="fas fa-lightbulb"></i> Quick Topics</h3>
@@ -128,6 +131,48 @@
     margin-top: 6px;
     text-align: right;
 }
+@media (max-width: 768px) {
+    .chatbot-page {
+        flex-direction: column !important;
+        height: auto !important;
+    }
+    .chatbot-sidebar {
+        display: none;
+        width: 100% !important;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .chatbot-sidebar.open {
+        display: block !important;
+    }
+    .chatbot-main {
+        width: 100% !important;
+        height: 80vh !important;
+    }
+    .quick-topics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .topic-btn {
+        font-size: 0.8rem !important;
+        padding: 6px 10px !important;
+    }
+    .mobile-toggle {
+        display: block !important;
+    }
+}
+.mobile-toggle {
+    display: none;
+    width: 100%;
+    padding: 10px;
+    background: #2980b9;
+    color: white;
+    border: none;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-align: center;
+}
 </style>
 {% endblock %}
 
@@ -166,6 +211,14 @@ function formatMessage(text) {
     }
     if (inList) html += '</ul>';
     return html;
+}
+function toggleSidebar() {
+    const sidebar = document.querySelector('.chatbot-sidebar');
+    sidebar.classList.toggle('open');
+    const btn = document.querySelector('.mobile-toggle');
+    btn.innerHTML = sidebar.classList.contains('open')
+        ? '<i class="fas fa-times"></i> Hide Topics ▲'
+        : '<i class="fas fa-lightbulb"></i> Quick Topics ▼';
 }
 
 function appendMessage(role, content) {
