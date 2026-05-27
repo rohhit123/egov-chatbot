@@ -377,7 +377,7 @@ Rules:
 def get_bot_response(user_message):
     """Try Ollama first (local), then Groq (Render), then keyword fallback."""
     
-    # Try Ollama first — works on local Mac with Ollama running
+    # Try Ollama first
     try:
         response = http_requests.post(
             "http://localhost:11434/api/chat",
@@ -397,42 +397,51 @@ def get_bot_response(user_message):
     except Exception as e:
         print(f"Ollama not available: {e}")
     
-    # Try Groq API (fastest and most reliable for production)
+    # Try Groq API with current models
     groq_api_key = os.environ.get("GROQ_API_KEY")
     if groq_api_key:
-        try:
-            print("Trying Groq API...")
-            response = http_requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {groq_api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "mixtral-8x7b-32768",  # Great for government queries
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": user_message}
-                    ],
-                    "max_tokens": 500,
-                    "temperature": 0.7
-                },
-                timeout=20
-            )
-            if response.status_code == 200:
-                print("✅ Groq API responded")
-                return response.json()["choices"][0]["message"]["content"]
-            else:
-                print(f"Groq API error: {response.status_code} - {response.text}")
-        except Exception as e:
-            print(f"Groq API failed: {e}")
+        # Current working Groq models (as of 2026)
+        groq_models = [
+            "llama-3.3-70b-versatile",  # Best quality
+            "llama-3.1-8b-instant",      # Fast
+            "gemma2-9b-it",              # Good for Q&A
+            "llama3-70b-8192"            # Reliable fallback
+        ]
+        
+        for model in groq_models:
+            try:
+                print(f"Trying Groq model: {model}")
+                response = http_requests.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {groq_api_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "model": model,
+                        "messages": [
+                            {"role": "system", "content": SYSTEM_PROMPT},
+                            {"role": "user", "content": user_message}
+                        ],
+                        "max_tokens": 500,
+                        "temperature": 0.7
+                    },
+                    timeout=20
+                )
+                if response.status_code == 200:
+                    print(f"✅ Groq API responded with {model}")
+                    return response.json()["choices"][0]["message"]["content"]
+                else:
+                    print(f"Groq model {model} failed: {response.status_code}")
+            except Exception as e:
+                print(f"Groq model {model} error: {e}")
+                continue
     else:
         print("No Groq API key found")
     
-    # Final fallback — keywords always work
+    # Final fallback
     print("Using keyword fallback")
     return keyword_fallback(user_message)
-
 def keyword_fallback(user_message):
     """Keyword matcher when AI is unavailable."""
     msg = user_message.lower().strip()
