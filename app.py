@@ -746,7 +746,7 @@ with app.app_context():
             print("Admin user created!")
         print("Database initialized!")
     except Exception as e:
-        print(f"DB init error: {e}")from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+        print(f"DB init error: {e}")
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user, UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
