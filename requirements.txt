@@ -1,12 +1,7 @@
-# Backup current file
-mv requirements.txt requirements.txt.backup
-
-# Create correct requirements.txt
-cat > requirements.txt << 'EOF'
 Flask>=2.3.0
 flask-sqlalchemy>=3.0.0
 flask-login>=0.6.0
 werkzeug>=2.3.0
 openai>=1.0.0
 requests>=2.31.0
-EOF
+gunicorn>=21.0.0
