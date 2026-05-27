@@ -375,9 +375,9 @@ Rules:
 # ------------------ Chatbot Logic ------------------
 
 def get_bot_response(user_message):
-    """Try Ollama first (local), then Groq (Render), then keyword fallback."""
+    """Try Ollama first (local), then Groq (optimized), then keyword fallback."""
     
-    # Try Ollama first
+    # Try Ollama first — for local development
     try:
         response = http_requests.post(
             "http://localhost:11434/api/chat",
@@ -397,20 +397,20 @@ def get_bot_response(user_message):
     except Exception as e:
         print(f"Ollama not available: {e}")
     
-    # Try Groq API with current models
+    # Try Groq API - Using best model for limits
     groq_api_key = os.environ.get("GROQ_API_KEY")
     if groq_api_key:
-        # Current working Groq models (as of 2026)
+        # Ordered by best limits first
         groq_models = [
-            "llama-3.3-70b-versatile",  # Best quality
-            "llama-3.1-8b-instant",      # Fast
-            "gemma2-9b-it",              # Good for Q&A
-            "llama3-70b-8192"            # Reliable fallback
+            "llama-3.1-8b-instant",      # 14,400/day - BEST FOR DEMO
+            "qwen/qwen3-32b",             # 60/min - Good backup
+            "llama-3.3-70b-versatile",    # 1,000/day - Highest quality
+            "gemma2-9b-it"                # Reliable fallback
         ]
         
         for model in groq_models:
             try:
-                print(f"Trying Groq model: {model}")
+                print(f"🤖 Groq ({model})")
                 response = http_requests.post(
                     "https://api.groq.com/openai/v1/chat/completions",
                     headers={
@@ -428,16 +428,20 @@ def get_bot_response(user_message):
                     },
                     timeout=20
                 )
+                
                 if response.status_code == 200:
-                    print(f"✅ Groq API responded with {model}")
-                    return response.json()["choices"][0]["message"]["content"]
+                    result = response.json()["choices"][0]["message"]["content"]
+                    print(f"✅ Groq ({model}) responded")
+                    return result
                 else:
-                    print(f"Groq model {model} failed: {response.status_code}")
+                    print(f"❌ Groq {model} failed: {response.status_code}")
+                    
             except Exception as e:
-                print(f"Groq model {model} error: {e}")
+                print(f"❌ {model} error: {str(e)[:50]}")
                 continue
     else:
-        print("No Groq API key found")
+        print("⚠️ No Groq API key found - add GROQ_API_KEY to environment")
+    
     
     # Final fallback
     print("Using keyword fallback")
