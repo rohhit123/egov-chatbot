@@ -64,9 +64,8 @@
 </div>
 
 <style>
-/* ── Bubble content formatting ── */
 .bubble-content {
-    line-height: 1.65;
+    line-height: 1.7;
     font-size: 0.95rem;
 }
 .bubble-content p {
@@ -75,10 +74,8 @@
 .bubble-content p:last-child {
     margin-bottom: 0;
 }
-.bubble-content b,
-.bubble-content strong {
+.bubble-content strong, .bubble-content b {
     font-weight: 600;
-    color: inherit;
 }
 .bubble-content a {
     color: #2980b9;
@@ -88,39 +85,42 @@
 .bubble-content a:hover {
     color: #1a5276;
 }
-/* Bullet lines from <br>• */
-.bubble-content br {
-    display: block;
-    margin: 2px 0;
-}
-/* Formatted list styling */
 .bubble-content ul {
-    margin: 6px 0 6px 18px;
-    padding: 0;
+    margin: 6px 0 6px 0;
+    padding-left: 0;
+    list-style: none;
 }
 .bubble-content ul li {
-    margin-bottom: 4px;
+    padding: 3px 0 3px 20px;
+    position: relative;
+    margin-bottom: 2px;
 }
-
-/* ── User bubble ── */
-.user-msg .bubble {
-    background: linear-gradient(135deg, #2980b9, #1a5276);
-    color: #fff;
-    border-radius: 18px 4px 18px 18px;
+.bubble-content ul li::before {
+    content: '•';
+    position: absolute;
+    left: 6px;
+    color: #2980b9;
+    font-weight: bold;
 }
-.user-msg .bubble-content a {
-    color: #aed6f1;
-}
-
-/* ── Bot bubble ── */
 .bot-msg .bubble {
     background: #f4f6f8;
     color: #2c3e50;
     border-radius: 4px 18px 18px 18px;
     border: 1px solid #e0e4e8;
+    padding: 12px 16px;
 }
-
-/* ── Time stamp ── */
+.user-msg .bubble {
+    background: linear-gradient(135deg, #2980b9, #1a5276);
+    color: #fff;
+    border-radius: 18px 4px 18px 18px;
+    padding: 12px 16px;
+}
+.user-msg .bubble-content a {
+    color: #aed6f1;
+}
+.user-msg .bubble-content ul li::before {
+    color: #aed6f1;
+}
 .msg-time {
     display: block;
     font-size: 0.72rem;
@@ -133,10 +133,39 @@
 
 {% block scripts %}
 <script>
-function formatResponse(text) {
-    // Convert <br> and \n to actual line breaks handled by innerHTML
-    // Already HTML from backend — just return as-is but wrap nicely
-    return text;
+function formatMessage(text) {
+    // If already contains HTML tags (keyword fallback), render as-is
+    if (text.includes('<b>') || text.includes('<br>') || text.includes('<a ')) {
+        return text;
+    }
+
+    // Strip markdown bold **text**
+    text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Strip markdown italic *text* (single stars not already replaced)
+    text = text.replace(/\*([^*]+)\*/g, '$1');
+    // Strip markdown headers
+    text = text.replace(/^#{1,3}\s+/gm, '');
+
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+
+    for (let line of lines) {
+        line = line.trim();
+        if (!line) {
+            if (inList) { html += '</ul>'; inList = false; }
+            continue;
+        }
+        if (line.startsWith('- ') || line.startsWith('• ') || line.startsWith('* ')) {
+            if (!inList) { html += '<ul>'; inList = true; }
+            html += `<li>${line.substring(2)}</li>`;
+        } else {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<p>${line}</p>`;
+        }
+    }
+    if (inList) html += '</ul>';
+    return html;
 }
 
 function appendMessage(role, content) {
@@ -144,11 +173,11 @@ function appendMessage(role, content) {
     const now = new Date().toLocaleTimeString('en-AU', {hour:'2-digit', minute:'2-digit'});
     const wrapper = document.createElement('div');
     wrapper.className = `msg-wrapper ${role === 'user' ? 'user-msg' : 'bot-msg'}`;
-
+    const formatted = role === 'bot' ? formatMessage(content) : content;
     wrapper.innerHTML = `
         ${role === 'bot' ? '<div class="avatar"><i class="fas fa-robot"></i></div>' : ''}
         <div class="bubble">
-            <div class="bubble-content">${content}</div>
+            <div class="bubble-content">${formatted}</div>
             <span class="msg-time">${now}</span>
         </div>
         ${role === 'user' ? '<div class="avatar user-av"><i class="fas fa-user"></i></div>' : ''}
@@ -161,11 +190,9 @@ function sendMessage() {
     const input = document.getElementById('userInput');
     const msg = input.value.trim();
     if (!msg) return;
-
     appendMessage('user', msg);
     input.value = '';
     showTyping();
-
     fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -195,8 +222,7 @@ function hideTyping() {
     document.getElementById('typingIndicator').style.display = 'none';
 }
 function clearChat() {
-    const c = document.getElementById('chatMessages');
-    c.innerHTML = '';
+    document.getElementById('chatMessages').innerHTML = '';
     appendMessage('bot', 'Chat cleared! How can I help you today? 😊');
 }
 </script>
