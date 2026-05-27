@@ -1469,21 +1469,6 @@ def admin():
     all_requests = ServiceRequest.query.order_by(ServiceRequest.id.desc()).all()
     all_users = User.query.all()
     avg_rating = db.session.query(db.func.avg(Feedback.rating)).scalar() or 0
-    return render_template('admin.html',
-                           requests=all_requests,
-                           users=all_users,
-                           avg_rating=round(avg_rating, 1))
-
-
-@app.route('/admin')
-@login_required
-def admin():
-    if current_user.role != 'admin':
-        flash("Access denied.", "error")
-        return redirect(url_for('dashboard'))
-    all_requests = ServiceRequest.query.order_by(ServiceRequest.id.desc()).all()
-    all_users = User.query.all()
-    avg_rating = db.session.query(db.func.avg(Feedback.rating)).scalar() or 0
 
     # Chart data — requests by service type
     service_types = db.session.query(
