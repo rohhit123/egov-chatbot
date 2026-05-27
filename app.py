@@ -375,8 +375,8 @@ Rules:
 # ------------------ Chatbot Logic ------------------
 
 def get_bot_response(user_message):
-    """Try Ollama first (local Mac), then OpenRouter (Render), then keywords (always works)."""
-
+    """Try Ollama first (local), then Groq (Render), then keyword fallback."""
+    
     # Try Ollama first — works on local Mac with Ollama running
     try:
         response = http_requests.post(
@@ -396,46 +396,39 @@ def get_bot_response(user_message):
             return response.json()["message"]["content"]
     except Exception as e:
         print(f"Ollama not available: {e}")
-
-    # Try OpenRouter with correct model names
-    try:
-        if OPENROUTER_API_KEY:
-            print(f"Attempting OpenRouter with API key: {OPENROUTER_API_KEY[:10]}...")
-            client = OpenAI(
-                base_url="https://openrouter.ai/api/v1",
-                api_key=OPENROUTER_API_KEY
+    
+    # Try Groq API (fastest and most reliable for production)
+    groq_api_key = os.environ.get("GROQ_API_KEY")
+    if groq_api_key:
+        try:
+            print("Trying Groq API...")
+            response = http_requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {groq_api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": "mixtral-8x7b-32768",  # Great for government queries
+                    "messages": [
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": user_message}
+                    ],
+                    "max_tokens": 500,
+                    "temperature": 0.7
+                },
+                timeout=20
             )
-            
-            # Correct model names that work on OpenRouter
-            models_to_try = [
-                "mistralai/mistral-7b-instruct:free",  # Works with :free
-                "google/gemma-2-2b-it:free",
-                "microsoft/phi-2:free",
-                "meta-llama/llama-3.2-3b-instruct:free"
-            ]
-            
-            for model in models_to_try:
-                try:
-                    print(f"Trying model: {model}")
-                    completion = client.chat.completions.create(
-                        model=model,
-                        max_tokens=400,
-                        messages=[
-                            {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user", "content": user_message}
-                        ],
-                        timeout=15
-                    )
-                    print(f"✅ OpenRouter responded with {model}")
-                    return completion.choices[0].message.content
-                except Exception as model_error:
-                    print(f"Model {model} failed: {model_error}")
-                    continue
-        else:
-            print("No OpenRouter API key found")
-    except Exception as e:
-        print(f"OpenRouter not available: {e}")
-
+            if response.status_code == 200:
+                print("✅ Groq API responded")
+                return response.json()["choices"][0]["message"]["content"]
+            else:
+                print(f"Groq API error: {response.status_code} - {response.text}")
+        except Exception as e:
+            print(f"Groq API failed: {e}")
+    else:
+        print("No Groq API key found")
+    
     # Final fallback — keywords always work
     print("Using keyword fallback")
     return keyword_fallback(user_message)
