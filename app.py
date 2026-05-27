@@ -12,7 +12,11 @@ import requests as http_requests
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "egov_secret_key_2024")
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///egov_chatbot.db'
+import os
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    'DATABASE_URL',
+    'sqlite:///egov_chatbot.db'  # local fallback
+).replace('postgres://', 'postgresql://', 1)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
